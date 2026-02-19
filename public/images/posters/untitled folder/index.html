@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PlantUML to UML Diagram Converter</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      padding: 30px;
+    }
+
+    .input-section,
+    .output-section {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    select,
+    textarea,
+    button {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e1e5e9;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 200px;
+      font-family: 'Courier New', monospace;
+      line-height: 1.5;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 12px 24px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .secondary-btn {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .output-area {
+      min-height: 300px;
+      border: 2px dashed #e1e5e9;
+      border-radius: 10px;
+      padding: 20px;
+      background: #f8f9fa;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #666;
+    }
+
+    .output-area.has-content {
+      border-style: solid;
+      border-color: #28a745;
+      background: white;
+    }
+
+    .diagram-preview {
+      max-width: 100%;
+      max-height: 500px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .examples {
+      margin-top: 20px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+
+    .example-btn {
+      display: inline-block;
+      margin: 5px;
+      padding: 8px 16px;
+      background: #e9ecef;
+      color: #495057;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .example-btn:hover {
+      background: #667eea;
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .loading {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .error {
+      color: #dc3545;
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .success {
+      color: #155724;
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 20px;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+    }
+  </style>
+  <script src="https://unpkg.com/plantuml-encoder/dist/plantuml-encoder.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎨 PlantUML Converter</h1>
+      <p>Transform your PlantUML code into beautiful UML diagrams</p>
+    </div>
+
+    <div class="main-content">
+      <div class="input-section">
+        <h2 class="section-title">
+          <span class="icon">📝</span>
+          Input Configuration
+        </h2>
+
+        <div class="form-group">
+          <label for="diagramType">Diagram Type:</label>
+          <select id="diagramType">
+            <option value="class">Class Diagram</option>
+            <option value="sequence">Sequence Diagram</option>
+            <option value="usecase">Use Case Diagram</option>
+            <option value="activity">Activity Diagram</option>
+            <option value="component">Component Diagram</option>
+            <option value="state">State Diagram</option>
+            <option value="object">Object Diagram</option>
+            <option value="deployment">Deployment Diagram</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="outputFormat">Output Format:</label>
+          <select id="outputFormat">
+            <option value="svg">SVG (Scalable)</option>
+            <option value="png">PNG (Image)</option>
+            <option value="txt">ASCII Art</option>
+            <option value="puml">PlantUML Source</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="plantUmlCode">PlantUML Code:</label>
+          <textarea id="plantUmlCode" placeholder="Enter your PlantUML code here...">@startuml
+class User {
+  +String name
+  +String email
+  +login()
+  +logout()
+}
+
+class Order {
+  +int orderId
+  +Date orderDate
+  +double total
+  +addItem()
+  +removeItem()
+}
+
+User ||--o{ Order : places
+@enduml
+          </textarea>
+        </div>
+
+        <div class="button-group">
+          <button onclick="convertDiagram()">🚀 Convert</button>
+          <button onclick="clearAll()" class="secondary-btn">🗑️ Clear</button>
+        </div>
+
+        <div class="examples">
+          <h3>Quick Examples:</h3>
+          <button class="example-btn" onclick="loadExample('class')">Class Diagram</button>
+          <button class="example-btn" onclick="loadExample('sequence')">Sequence Diagram</button>
+          <button class="example-btn" onclick="loadExample('usecase')">Use Case</button>
+          <button class="example-btn" onclick="loadExample('activity')">Activity</button>
+        </div>
+      </div>
+
+      <div class="output-section">
+        <h2 class="section-title">
+          <span class="icon">🎯</span>
+          Generated Diagram
+        </h2>
+
+        <div class="output-area" id="outputArea">
+          <div>
+            <h3>Your diagram will appear here</h3>
+            <p>Enter PlantUML code and click Convert to generate your diagram</p>
+          </div>
+          <div class="loading" id="loading">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+        <div class="button-group" style="margin-top: 20px;">
+          <button onclick="downloadDiagram()" id="downloadBtn" style="display: none;">📥 Download</button>
+          <button onclick="copyToClipboard()" id="copyBtn" style="display: none;">📋 Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentDiagramData = null;
+    let currentFormat = 'svg';
+    let currentServerUrl = '';
+
+    const examples = {
+      class: `@startuml
+class Vehicle {
+  +String brand
+  +String model
+  +int year
+  +start()
+  +stop()
+}
+
+class Car extends Vehicle {
+  +int doors
+  +String fuelType
+  +openTrunk()
+}
+
+class Motorcycle extends Vehicle {
+  +boolean hasSidecar
+  +wheelie()
+}
+
+Vehicle <|-- Car
+Vehicle <|-- Motorcycle
+@enduml`,
+
+      sequence: `@startuml
+actor User
+participant "Web Browser" as WB
+participant "Web Server" as WS
+participant Database as DB
+
+User -> WB: Enter URL
+WB -> WS: HTTP Request
+WS -> DB: Query Data
+DB --> WS: Return Results
+WS --> WB: HTTP Response
+WB --> User: Display Page
+@enduml`,
+
+      usecase: `@startuml
+left to right direction
+actor Customer
+actor Administrator
+
+rectangle "Online Store" {
+  Customer --> (Browse Products)
+  Customer --> (Add to Cart)
+  Customer --> (Checkout)
+  Customer --> (Track Order)
+
+  Administrator --> (Manage Products)
+  Administrator --> (Process Orders)
+  Administrator --> (Generate Reports)
+}
+@enduml`,
+
+      activity: `@startuml
+start
+:User opens app;
+if (User logged in?) then (yes)
+  :Show dashboard;
+else (no)
+  :Show login screen;
+  :User enters credentials;
+  if (Valid credentials?) then (yes)
+    :Login successful;
+    :Show dashboard;
+  else (no)
+    :Show error message;
+    stop
+  endif
+endif
+:User interacts with app;
+stop
+@enduml`
+    };
+
+    function loadExample(type) {
+      document.getElementById('plantUmlCode').value = examples[type];
+      document.getElementById('diagramType').value = type;
+      document.getElementById('outputArea').classList.remove('has-content');
+      document.getElementById('downloadBtn').style.display = 'none';
+      document.getElementById('copyBtn').style.display = 'none';
+      currentDiagramData = null;
+      currentServerUrl = '';
+    }
+
+    function clearAll() {
+      document.getElementById('plantUmlCode').value = '';
+      document.getElementById('outputArea').innerHTML = `
+        <div>
+          <h3>Your diagram will appear here</h3>
+          <p>Enter PlantUML code and click Convert to generate your diagram</p>
+        </div>
+      `;
+      document.getElementById('outputArea').classList.remove('has-content');
+      document.getElementById('downloadBtn').style.display = 'none';
+      document.getElementById('copyBtn').style.display = 'none';
+      currentDiagramData = null;
+      currentServerUrl = '';
+    }
+
+    async function convertDiagram() {
+      const code = document.getElementById('plantUmlCode').value.trim();
+      const format = document.getElementById('outputFormat').value;
+      currentFormat = format;
+
+      if (!code) {
+        showError('Please enter PlantUML code');
+        return;
+      }
+
+      showLoading(true);
+      document.getElementById('outputArea').classList.remove('has-content');
+      document.getElementById('downloadBtn').style.display = 'none';
+      document.getElementById('copyBtn').style.display = 'none';
+
+      try {
+        const result = await processPlantUML(code, format);
+        displayResult(result, format);
+        showSuccess('Diagram generated successfully!');
+      } catch (error) {
+        showError('Error generating diagram: ' + error.message);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function processPlantUML(code, format) {
+      // Encode PlantUML text
+      const encoded = plantumlEncoder.encode(code);
+
+      if (format === 'puml') {
+        // Just return the source
+        currentServerUrl = '';
+        return code;
+      }
+
+      let serverUrl = '';
+      if (format === 'svg') {
+        serverUrl = `https://www.plantuml.com/plantuml/svg/${encoded}`;
+        // Fetch SVG text
+        const response = await fetch(serverUrl);
+        if (!response.ok) throw new Error(`Status ${response.status}`);
+        const svgText = await response.text();
+        currentServerUrl = serverUrl;
+        return svgText;
+      }
+
+      if (format === 'png') {
+        serverUrl = `https://www.plantuml.com/plantuml/png/${encoded}`;
+        // We won’t fetch the blob here for display; the <img> can handle CORS.
+        currentServerUrl = serverUrl;
+        return serverUrl;
+      }
+
+      if (format === 'txt') {
+        serverUrl = `https://www.plantuml.com/plantuml/txt/${encoded}`;
+        // Fetch ASCII text
+        const response = await fetch(serverUrl);
+        if (!response.ok) throw new Error(`Status ${response.status}`);
+        const asciiText = await response.text();
+        currentServerUrl = serverUrl;
+        return asciiText;
+      }
+
+      throw new Error('Unsupported format');
+    }
+
+    function displayResult(result, format) {
+      const outputArea = document.getElementById('outputArea');
+      outputArea.classList.add('has-content');
+
+      if (format === 'svg') {
+        // Insert raw SVG
+        outputArea.innerHTML = result;
+        currentDiagramData = result;
+      } else if (format === 'png') {
+        // The result string is the server URL for the PNG
+        outputArea.innerHTML = `<img src="${result}" class="diagram-preview" alt="Generated Diagram">`;
+        currentDiagramData = result;
+      } else {
+        // For 'txt' and 'puml', show in a <pre>
+        outputArea.innerHTML = `
+          <pre style="
+            text-align: left;
+            white-space: pre-wrap;
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            overflow: auto;
+          ">${escapeHtml(result)}</pre>
+        `;
+        currentDiagramData = result;
+      }
+
+      document.getElementById('downloadBtn').style.display = 'inline-block';
+      document.getElementById('copyBtn').style.display = 'inline-block';
+    }
+
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    function showError(message) {
+      const outputArea = document.getElementById('outputArea');
+      outputArea.innerHTML = `<div class="error">${message}</div>`;
+      currentDiagramData = null;
+      currentServerUrl = '';
+      document.getElementById('downloadBtn').style.display = 'none';
+      document.getElementById('copyBtn').style.display = 'none';
+    }
+
+    function showSuccess(message) {
+      const outputArea = document.getElementById('outputArea');
+      const existing = outputArea.innerHTML;
+      outputArea.innerHTML = existing + `<div class="success">${message}</div>`;
+      setTimeout(() => {
+        const successDiv = outputArea.querySelector('.success');
+        if (successDiv) successDiv.remove();
+      }, 3000);
+    }
+
+    function downloadDiagram() {
+      if (!currentFormat || (!currentDiagramData && !currentServerUrl)) return;
+
+      const format = currentFormat;
+      let filename = '';
+      if (format === 'puml') {
+        filename = 'diagram.puml';
+        const blob = new Blob([currentDiagramData], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        triggerDownload(url, filename);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      if (format === 'txt') {
+        filename = 'diagram.txt';
+        const blob = new Blob([currentDiagramData], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        triggerDownload(url, filename);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      if (format === 'svg') {
+        filename = 'diagram.svg';
+        const blob = new Blob([currentDiagramData], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        triggerDownload(url, filename);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      if (format === 'png') {
+        // For PNG, we can try downloading directly from the server URL
+        filename = 'diagram.png';
+        triggerDownload(currentServerUrl, filename);
+        return;
+      }
+    }
+
+    function triggerDownload(href, filename) {
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function copyToClipboard() {
+      if (!currentDiagramData && !currentServerUrl) return;
+
+      const format = currentFormat;
+      let textToCopy = '';
+
+      if (format === 'png') {
+        // Copy the URL of the PNG
+        textToCopy = currentServerUrl;
+      } else {
+        textToCopy = currentDiagramData;
+      }
+
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          showSuccess('Copied to clipboard!');
+        })
+        .catch(() => {
+          showError('Failed to copy to clipboard');
+        });
+    }
+
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    window.onload = function() {
+      loadExample('class');
+    };
+  </script>
+</body>
+</html>
